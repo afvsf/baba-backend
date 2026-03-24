@@ -1,35 +1,41 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const cors = require('cors');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = new sqlite3.Database('./baba.db');
+const db = new Database('baba.db');;
 
 
 // Jogadores
-app.get('/jogadores', (req,res)=>{
-  db.all('SELECT * FROM jogadores', [], (err,rows)=>{
-    res.json(rows);
-  });
+app.get('/jogadores', (req, res) => {
+  const rows = db.prepare("SELECT * FROM jogadores").all();
+  res.json(rows);
 });
 
-app.post('/jogadores', (req,res)=>{
-  const {id,nome,tipo} = req.body;
-  db.run('INSERT INTO jogadores VALUES (?,?,?)',[id,nome,tipo]);
-  res.json({ok:true});
+app.post('/jogadores', (req, res) => {
+  const { id, nome, tipo } = req.body;
+
+  db.prepare(`
+    INSERT INTO jogadores (id, nome, tipo)
+    VALUES (?, ?, ?)
+  `).run(id, nome, tipo);
+
+  res.sendStatus(200);
 });
 
 // Registrar participação
-app.post('/registro', (req,res)=>{
-  const {data,jogadorId,gols,cartoes,obs} = req.body;
-  db.run(
-    'INSERT INTO registros (data,jogadorId,gols,cartoes,obs) VALUES (?,?,?,?,?)',
-    [data,jogadorId,gols,cartoes,obs]
-  );
-  res.json({ok:true});
+app.post('/registro', (req, res) => {
+  const { data, jogadorId, gols, cartoes, obs } = req.body;
+
+  db.prepare(`
+    INSERT INTO registros (data, jogadorId, gols, cartoes, obs)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(data, jogadorId, gols, cartoes, obs);
+
+  res.sendStatus(200);
 });
 
 // Buscar registros
@@ -40,10 +46,15 @@ app.get('/registros', (req,res)=>{
 });
 
 // Mensalidades
-app.post('/mensalidade', (req,res)=>{
-  const {mes,jogadorId} = req.body;
-  db.run('INSERT INTO mensalidades (mes,jogadorId) VALUES (?,?)',[mes,jogadorId]);
-  res.json({ok:true});
+app.post('/mensalidade', (req, res) => {
+  const { mes, jogadorId } = req.body;
+
+  db.prepare(`
+    INSERT INTO mensalidades (mes, jogadorId)
+    VALUES (?, ?)
+  `).run(mes, jogadorId);
+
+  res.sendStatus(200);
 });
 
 app.get('/mensalidades', (req,res)=>{
@@ -53,10 +64,15 @@ app.get('/mensalidades', (req,res)=>{
 });
 
 // Gastos
-app.post('/gasto', (req,res)=>{
-  const {data,desc,valor} = req.body;
-  db.run('INSERT INTO gastos (data,desc,valor) VALUES (?,?,?)',[data,desc,valor]);
-  res.json({ok:true});
+app.post('/gasto', (req, res) => {
+  const { data, desc, valor } = req.body;
+
+  db.prepare(`
+    INSERT INTO gastos (data, desc, valor)
+    VALUES (?, ?, ?)
+  `).run(data, desc, valor);
+
+  res.sendStatus(200);
 });
 
 app.get('/gastos', (req,res)=>{
