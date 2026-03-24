@@ -11,10 +11,15 @@ const db = new Database('baba.db');;
 
 // Jogadores
 app.get('/jogadores', (req, res) => {
-  const rows = db.prepare("SELECT * FROM jogadores").all();
-  res.json(rows);
+  try {
+    const rows = db.prepare("SELECT * FROM jogadores").all();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
+// Cadastrar jogador
 app.post('/jogadores', (req, res) => {
   const { id, nome, tipo } = req.body;
 
@@ -39,10 +44,14 @@ app.post('/registro', (req, res) => {
 });
 
 // Buscar registros
-app.get('/registros', (req,res)=>{
-  db.all('SELECT * FROM registros', [], (err,rows)=>{
+app.get('/registros', (req, res) => {
+  try {
+    const rows = db.prepare("SELECT * FROM registros").all();
     res.json(rows);
-  });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: 'Erro ao buscar registros' });
+  }
 });
 
 // Mensalidades
