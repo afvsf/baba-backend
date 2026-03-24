@@ -6,10 +6,44 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = new Database('baba.db');;
+const db = new Database('baba.db');
 
+// ===== CRIAR TABELAS =====
+db.prepare(`
+CREATE TABLE IF NOT EXISTS jogadores (
+  id TEXT,
+  nome TEXT,
+  tipo TEXT
+)
+`).run();
 
-// Jogadores
+db.prepare(`
+CREATE TABLE IF NOT EXISTS registros (
+  data TEXT,
+  jogadorId TEXT,
+  gols INTEGER,
+  cartoes INTEGER,
+  obs TEXT,
+  pagamento TEXT
+)
+`).run();
+
+db.prepare(`
+CREATE TABLE IF NOT EXISTS mensalidades (
+  mes TEXT,
+  jogadorId TEXT
+)
+`).run();
+
+db.prepare(`
+CREATE TABLE IF NOT EXISTS gastos (
+  data TEXT,
+  desc TEXT,
+  valor REAL
+)
+`).run();
+
+// ===== JOGADORES =====
 app.get('/jogadores', (req, res) => {
   try {
     const rows = db.prepare("SELECT * FROM jogadores").all();
@@ -19,7 +53,6 @@ app.get('/jogadores', (req, res) => {
   }
 });
 
-// Cadastrar jogador
 app.post('/jogadores', (req, res) => {
   const { id, nome, tipo } = req.body;
 
@@ -31,19 +64,18 @@ app.post('/jogadores', (req, res) => {
   res.sendStatus(200);
 });
 
-// Registrar participação
+// ===== REGISTROS =====
 app.post('/registro', (req, res) => {
-  const { data, jogadorId, gols, cartoes, obs } = req.body;
+  const { data, jogadorId, gols, cartoes, obs, pagamento } = req.body;
 
   db.prepare(`
-    INSERT INTO registros (data, jogadorId, gols, cartoes, obs)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(data, jogadorId, gols, cartoes, obs);
+    INSERT INTO registros (data, jogadorId, gols, cartoes, obs, pagamento)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(data, jogadorId, gols, cartoes, obs, pagamento);
 
   res.sendStatus(200);
 });
 
-// Buscar registros
 app.get('/registros', (req, res) => {
   try {
     const rows = db.prepare("SELECT * FROM registros").all();
@@ -54,7 +86,7 @@ app.get('/registros', (req, res) => {
   }
 });
 
-// Mensalidades
+// ===== MENSALIDADES =====
 app.post('/mensalidade', (req, res) => {
   const { mes, jogadorId } = req.body;
 
@@ -66,13 +98,16 @@ app.post('/mensalidade', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/mensalidades', (req,res)=>{
-  db.all('SELECT * FROM mensalidades', [], (err,rows)=>{
+app.get('/mensalidades', (req, res) => {
+  try {
+    const rows = db.prepare("SELECT * FROM mensalidades").all();
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
-// Gastos
+// ===== GASTOS =====
 app.post('/gasto', (req, res) => {
   const { data, desc, valor } = req.body;
 
@@ -84,16 +119,18 @@ app.post('/gasto', (req, res) => {
   res.sendStatus(200);
 });
 
-app.get('/gastos', (req,res)=>{
-  db.all('SELECT * FROM gastos', [], (err,rows)=>{
+app.get('/gastos', (req, res) => {
+  try {
+    const rows = db.prepare("SELECT * FROM gastos").all();
     res.json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
 });
 
 // ===== START =====
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
   console.log("Servidor rodando");
 });
-
