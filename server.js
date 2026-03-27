@@ -1,51 +1,65 @@
 const express = require('express');
-const Database = require('better-sqlite3');
 const cors = require('cors');
+const { Pool } = require('pg');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = new Database('baba.db');
+// 🔥 conexão postgres
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 // ===== CRIAR TABELAS =====
-db.prepare(`
-CREATE TABLE IF NOT EXISTS jogadores (
-  id TEXT,
-  nome TEXT,
-  apelido TEXT,
-  posicao TEXT,
-  telefone TEXT,
-  tipo TEXT,
-  dataCadastro TEXT
-)
-`).run();
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS jogadores (
+      id TEXT PRIMARY KEY,
+      nome TEXT,
+      apelido TEXT,
+      posicao TEXT,
+      telefone TEXT,
+      tipo TEXT,
+      dataCadastro DATE
+    );
+  `);
 
-db.prepare(`
-CREATE TABLE IF NOT EXISTS registros (
-  data TEXT,
-  jogadorId TEXT,
-  gols INTEGER,
-  cartoes INTEGER,
-  obs TEXT,
-  pagamento TEXT
-)
-`).run();
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS registros (
+      id SERIAL PRIMARY KEY,
+      data TEXT,
+      jogadorId TEXT,
+      gols INTEGER,
+      cartoes INTEGER,
+      obs TEXT,
+      pagamento TEXT
+    );
+  `);
 
-db.prepare(`
-CREATE TABLE IF NOT EXISTS mensalidades (
-  mes TEXT,
-  jogadorId TEXT
-)
-`).run();
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS mensalidades (
+      id SERIAL PRIMARY KEY,
+      mes TEXT,
+      jogadorId TEXT,
+      data DATE
+    );
+  `);
 
-db.prepare(`
-CREATE TABLE IF NOT EXISTS gastos (
-  data TEXT,
-  desc TEXT,
-  valor REAL
-)
-`).run();
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS gastos (
+      id SERIAL PRIMARY KEY,
+      data TEXT,
+      desc TEXT,
+      valor REAL
+    );
+  `);
+
+  console.log("✅ Banco PostgreSQL pronto");
+}
+
+initDB();
 
 // ===== JOGADORES =====
 app.get('/jogadores', (req, res) => {
@@ -138,13 +152,6 @@ app.get('/gastos', (req, res) => {
   }
 });
 
-// ===== START =====
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Servidor rodando");
-});
-
 // DELETE jogador
 app.delete('/jogadores/:id', (req, res) => {
   const { id } = req.params;
@@ -153,3 +160,13 @@ app.delete('/jogadores/:id', (req, res) => {
 
   res.sendStatus(200);
 });
+
+
+// ===== START =====
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("🚀 Servidor rodando PostgreSQL");
+});
+
+
