@@ -13,7 +13,11 @@ db.prepare(`
 CREATE TABLE IF NOT EXISTS jogadores (
   id TEXT,
   nome TEXT,
-  tipo TEXT
+  apelido TEXT,
+  posicao TEXT,
+  telefone TEXT,
+  tipo TEXT,
+  dataCadastro TEXT
 )
 `).run();
 
@@ -54,12 +58,12 @@ app.get('/jogadores', (req, res) => {
 });
 
 app.post('/jogadores', (req, res) => {
-  const { id, nome, tipo } = req.body;
+  const { id, nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
 
   db.prepare(`
-    INSERT INTO jogadores (id, nome, tipo)
-    VALUES (?, ?, ?)
-  `).run(id, nome, tipo);
+    INSERT INTO jogadores (id, nome, apelido, posicao, telefone, tipo, dataCadastro)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(id, nome, apelido, posicao, telefone, tipo, dataCadastro);
 
   res.sendStatus(200);
 });
