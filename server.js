@@ -91,13 +91,19 @@ app.get('/registros', (req, res) => {
 });
 
 // ===== MENSALIDADES =====
-app.post('/mensalidade', (req, res) => {
+app.post('/mensalidades', (req, res) => {
   const { mes, jogadorId } = req.body;
 
-  db.prepare(`
-    INSERT INTO mensalidades (mes, jogadorId)
-    VALUES (?, ?)
-  `).run(mes, jogadorId);
+  const existe = db.prepare(`
+    SELECT * FROM mensalidades WHERE mes = ? AND jogadorId = ?
+  `).get(mes, jogadorId);
+
+  if(!existe){
+    db.prepare(`
+      INSERT INTO mensalidades (mes, jogadorId)
+      VALUES (?, ?)
+    `).run(mes, jogadorId);
+  }
 
   res.sendStatus(200);
 });
