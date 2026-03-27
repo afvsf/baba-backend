@@ -129,22 +129,25 @@ app.get('/registros', async (req, res) => {
 
 // ===== MENSALIDADES =====
 app.post('/mensalidades', async (req, res) => {
-  const { mes, jogadorId } = req.body;
+  const { mes, jogadorId, valor, data } = req.body;
 
   try {
-    const { rows } = await pool.query(`
-      SELECT * FROM mensalidades WHERE mes = $1 AND jogadorId = $2
-    `, [mes, jogadorId]);
+    const existe = await pool.query(
+      `SELECT * FROM mensalidades WHERE mes = $1 AND jogadorId = $2`,
+      [mes, jogadorId]
+    );
 
-    if(rows.length === 0){
-      await pool.query(`
-        INSERT INTO mensalidades (mes, jogadorId)
-        VALUES ($1,$2)
-      `, [mes, jogadorId]);
+    if (existe.rows.length === 0) {
+      await pool.query(
+        `INSERT INTO mensalidades (mes, jogadorId, valor, data)
+         VALUES ($1, $2, $3, $4)`,
+        [mes, jogadorId, valor || 20, data || new Date()]
+      );
     }
 
     res.sendStatus(200);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ erro: err.message });
   }
 });
