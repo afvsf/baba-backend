@@ -144,3 +144,12 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor rodando");
 });
+
+// DELETE jogador
+app.delete('/jogadores/:id', (req, res) => {
+  const { id } = req.params;
+
+  db.prepare("DELETE FROM jogadores WHERE id = ?").run(id);
+
+  res.sendStatus(200);
+});
