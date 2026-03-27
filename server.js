@@ -47,14 +47,14 @@ async function initDB() {
     );
   `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS gastos (
-      id SERIAL PRIMARY KEY,
-      data TEXT,
-      desc TEXT,
-      valor REAL
-    );
-  `);
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS gastos (
+    id SERIAL PRIMARY KEY,
+    data TEXT,
+    descricao TEXT,
+    valor REAL
+  );
+`);
 
   console.log("✅ Banco PostgreSQL pronto");
 }
@@ -133,10 +133,10 @@ app.get('/mensalidades', (req, res) => {
 
 // ===== GASTOS =====
 app.post('/gasto', (req, res) => {
-  const { data, desc, valor } = req.body;
+  const { data, descricao, valor } = req.body;
 
   db.prepare(`
-    INSERT INTO gastos (data, desc, valor)
+    INSERT INTO gastos (data, descricao, valor)
     VALUES (?, ?, ?)
   `).run(data, desc, valor);
 
