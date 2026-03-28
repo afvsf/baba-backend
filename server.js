@@ -138,12 +138,16 @@ app.post('/mensalidades', async (req, res) => {
     );
 
     if (existe.rows.length === 0) {
-      await pool.query(
-        `INSERT INTO mensalidades (mes, jogadorId, valor, data)
-         VALUES ($1, $2, $3, $4)`,
-        [mes, jogadorId, valor || 20, data || new Date()]
-      );
-    }
+  await pool.query(
+  `INSERT INTO mensalidades (mes, jogadorId, valor, data)
+   VALUES ($1, $2, $3, $4)`,
+  [
+    mes,
+    jogadorId,
+    valor || 20,
+    data || new Date().toISOString().slice(0,10) // 🔥 CORREÇÃO
+  ]
+);
 
     res.sendStatus(200);
   } catch (err) {
