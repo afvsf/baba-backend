@@ -149,7 +149,7 @@ app.post('/mensalidades', async (req, res) => {
   ]
 );
 
-    res.sendStatus(200);
+ res.sendStatus(200); // ✅ agora fora do IF
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: err.message });
