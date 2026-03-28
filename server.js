@@ -12,7 +12,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// ===== INIT DB =====
+// ===== INIT DB  =====
 async function initDB() {
 
   await pool.query(`
