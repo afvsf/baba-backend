@@ -39,14 +39,15 @@ async function initDB() {
     );
   `);
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS mensalidades (
-      id SERIAL PRIMARY KEY,
-      mes TEXT,
-      jogadorId TEXT,
-      data DATE DEFAULT NOW()
-    );
-  `);
+ await pool.query(`
+  CREATE TABLE IF NOT EXISTS mensalidades (
+    id SERIAL PRIMARY KEY,
+    mes TEXT,
+    jogadorId TEXT,
+    valor REAL,
+    data DATE DEFAULT NOW()
+  );
+`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS gastos (
