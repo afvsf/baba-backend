@@ -58,7 +58,7 @@ async function initDB() {
     );
   `);
 
-  console.log("✅ Banco PostgreSQL pronto");
+  console.log("✅ Banco PostgreSQL pronto!!");
 }
 
 initDB();
