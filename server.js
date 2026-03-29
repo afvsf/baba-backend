@@ -166,27 +166,46 @@ app.get('/mensalidades', async (req, res) => {
 });
 
 app.post('/mensalidades', async (req, res) => {
-  const { mes, jogadorId, valor, data } = req.body;
+  let { mes, jogadorId, valor, data } = req.body;
 
   try {
+
+    // 🔥 GARANTIR DATA SEM TIMEZONE
+    if(data){
+      data = data.split('T')[0]; // mantém só YYYY-MM-DD
+    } else {
+      data = new Date().toISOString().split('T')[0];
+    }
+
+    // 🔥 VALOR PADRÃO
+    valor = Number(valor || 20);
+
+    // 🔥 VERIFICAR SE JÁ EXISTE
     const existe = await pool.query(
       `SELECT id FROM mensalidades WHERE mes = $1 AND jogadorId = $2`,
       [mes, jogadorId]
     );
 
     if (existe.rows.length === 0) {
+
       await pool.query(`
         INSERT INTO mensalidades (mes, jogadorId, valor, data)
         VALUES ($1,$2,$3,$4)
-      `, [
-        mes,
-        jogadorId,
-        valor || 20,
-        data || new Date().toISOString().slice(0,10)
-      ]);
+      `, [mes, jogadorId, valor, data]);
+
+    } else {
+
+      // 🔥 SE JÁ EXISTE → ATUALIZA (MUITO IMPORTANTE)
+      await pool.query(`
+        UPDATE mensalidades
+        SET valor = $1, data = $2
+        WHERE mes = $3 AND jogadorId = $4
+      `, [valor, data, mes, jogadorId]);
+
     }
 
     res.sendStatus(200);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: err.message });
