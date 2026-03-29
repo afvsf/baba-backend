@@ -22,7 +22,7 @@ async function initDB() {
   //await pool.query(`DROP TABLE IF EXISTS jogadores;`);
 
   await pool.query(`
-    CREATE TABLE jogadores (
+    CREATE TABLE IF NOT EXISTS jogadores (
       id TEXT PRIMARY KEY,
       nome TEXT,
       apelido TEXT,
@@ -34,7 +34,7 @@ async function initDB() {
   `);
 
   await pool.query(`
-    CREATE TABLE registros (
+    CREATE TABLE IF NOT EXISTS registros (
       id SERIAL PRIMARY KEY,
       data TEXT,
       jogadorId TEXT,
@@ -46,7 +46,7 @@ async function initDB() {
   `);
 
   await pool.query(`
-    CREATE TABLE mensalidades (
+    CREATE TABLE IF NOT EXISTS mensalidades (
       id SERIAL PRIMARY KEY,
       mes TEXT,
       jogadorId TEXT,
@@ -56,7 +56,7 @@ async function initDB() {
   `);
 
   await pool.query(`
-    CREATE TABLE gastos (
+    CREATE TABLE IF NOT EXISTS gastos (
       id SERIAL PRIMARY KEY,
       data TEXT,
       descricao TEXT,
