@@ -159,7 +159,16 @@ app.post('/registro', async (req, res) => {
 app.get('/mensalidades', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM mensalidades");
-    res.json(rows);
+
+    const formatado = rows.map(r => ({
+      ...r,
+      dataFormatada: r.data
+        ? r.data.toISOString().split('T')[0].split('-').reverse().join('/')
+        : null
+    }));
+
+    res.json(formatado);
+
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
