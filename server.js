@@ -16,10 +16,10 @@ const pool = new Pool({
 async function initDB() {
 
   // 🔥 recria tudo (use só enquanto estiver em desenvolvimento)
-  await pool.query(`DROP TABLE IF EXISTS gastos;`);
-  await pool.query(`DROP TABLE IF EXISTS mensalidades;`);
-  await pool.query(`DROP TABLE IF EXISTS registros;`);
-  await pool.query(`DROP TABLE IF EXISTS jogadores;`);
+ // await pool.query(`DROP TABLE IF EXISTS gastos;`);
+ // await pool.query(`DROP TABLE IF EXISTS mensalidades;`);
+ // await pool.query(`DROP TABLE IF EXISTS registros;`);
+  //await pool.query(`DROP TABLE IF EXISTS jogadores;`);
 
   await pool.query(`
     CREATE TABLE jogadores (
