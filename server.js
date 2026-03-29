@@ -45,7 +45,7 @@ async function initDB() {
       mes TEXT,
       jogadorId TEXT,
       valor REAL,
-      data DATE DEFAULT NOW()
+      data DATE
     );
   `);
 
