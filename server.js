@@ -6,6 +6,23 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+function formatarData(data){
+  if(!data) return null;
+
+  // remove timezone
+  if(data.includes('T')){
+    return data.split('T')[0];
+  }
+
+  // converte dd/mm/yyyy → yyyy-mm-dd
+  if(data.includes('/')){
+    const [dia, mes, ano] = data.split('/');
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  return data;
+}
+
 // 🔥 CONEXÃO POSTGRES (Render)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -85,7 +102,7 @@ app.post('/jogadores', async (req, res) => {
 
     // 🔥 CORREÇÃO DATA
     if(dataCadastro){
-      dataCadastro = dataCadastro.split('T')[0]; // YYYY-MM-DD
+      dataCadastro = formatarData(dataCadastro);
     }
 
     await pool.query(`
@@ -120,7 +137,7 @@ app.put('/jogadores/:id', async (req, res) => {
 
     // 🔥 CORREÇÃO DATA
     if(dataCadastro){
-      dataCadastro = dataCadastro.split('T')[0];
+      dataCadastro = formatarData(dataCadastro);
     }
 
     await pool.query(`
@@ -151,15 +168,19 @@ app.get('/registros', async (req, res) => {
 });
 
 app.post('/registro', async (req, res) => {
-  const { data, jogadorId, gols, cartoes, obs, pagamento } = req.body;
+  let { data, jogadorId, gols, cartoes, obs, pagamento } = req.body;
 
   try {
+
+    data = formatarData(data);
+
     await pool.query(`
       INSERT INTO registros (data, jogadorId, gols, cartoes, obs, pagamento)
       VALUES ($1,$2,$3,$4,$5,$6)
     `, [data, jogadorId, gols, cartoes, obs, pagamento]);
 
     res.sendStatus(200);
+
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
@@ -178,6 +199,9 @@ app.get('/mensalidades', async (req, res) => {
       ...r,
       dataFormatada: r.data
         ? r.data.toISOString().split('T')[0].split('-').reverse().join('/')
+        : null,
+      dataISO: r.data
+        ? r.data.toISOString().split('T')[0]
         : null
     }));
 
@@ -186,24 +210,22 @@ app.get('/mensalidades', async (req, res) => {
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
-});
+});;
 
 app.post('/mensalidades', async (req, res) => {
   let { mes, jogadorId, valor, data } = req.body;
 
   try {
 
-    // 🔥 GARANTIR DATA SEM TIMEZONE
-    if(data){
-      data = data.split('T')[0]; // mantém só YYYY-MM-DD
-    } else {
-      data = new Date().toISOString().split('T')[0];
+    data = formatarData(data);
+
+    if(!data){
+      const hoje = new Date();
+      data = hoje.toISOString().split('T')[0];
     }
 
-    // 🔥 VALOR PADRÃO
     valor = Number(valor || 20);
 
-    // 🔥 VERIFICAR SE JÁ EXISTE
     const existe = await pool.query(
       `SELECT id FROM mensalidades WHERE mes = $1 AND jogadorId = $2`,
       [mes, jogadorId]
@@ -218,7 +240,6 @@ app.post('/mensalidades', async (req, res) => {
 
     } else {
 
-      // 🔥 SE JÁ EXISTE → ATUALIZA (MUITO IMPORTANTE)
       await pool.query(`
         UPDATE mensalidades
         SET valor = $1, data = $2
@@ -259,6 +280,26 @@ app.post('/gasto', async (req, res) => {
     `, [data, descricao, valor]);
 
     res.sendStatus(200);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+app.post('/gasto', async (req, res) => {
+  let { data, descricao, valor } = req.body;
+
+  try {
+
+    data = formatarData(data);
+    valor = Number(valor);
+
+    await pool.query(`
+      INSERT INTO gastos (data, descricao, valor)
+      VALUES ($1,$2,$3)
+    `, [data, descricao, valor]);
+
+    res.sendStatus(200);
+
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
