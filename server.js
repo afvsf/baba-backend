@@ -79,15 +79,22 @@ app.get('/jogadores', async (req, res) => {
 });
 
 app.post('/jogadores', async (req, res) => {
-  const { id, nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
+  let { id, nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
 
   try {
+
+    // 🔥 CORREÇÃO DATA
+    if(dataCadastro){
+      dataCadastro = dataCadastro.split('T')[0]; // YYYY-MM-DD
+    }
+
     await pool.query(`
       INSERT INTO jogadores (id, nome, apelido, posicao, telefone, tipo, dataCadastro)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
     `, [id, nome, apelido, posicao, telefone, tipo, dataCadastro]);
 
     res.sendStatus(200);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ erro: err.message });
