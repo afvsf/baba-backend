@@ -114,9 +114,15 @@ app.delete('/jogadores/:id', async (req, res) => {
 // UPDATE jogador
 app.put('/jogadores/:id', async (req, res) => {
   const { id } = req.params;
-  const { nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
+  let { nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
 
   try {
+
+    // 🔥 CORREÇÃO DATA
+    if(dataCadastro){
+      dataCadastro = dataCadastro.split('T')[0];
+    }
+
     await pool.query(`
       UPDATE jogadores
       SET nome=$1, apelido=$2, posicao=$3, telefone=$4, tipo=$5, dataCadastro=$6
@@ -124,6 +130,7 @@ app.put('/jogadores/:id', async (req, res) => {
     `, [nome, apelido, posicao, telefone, tipo, dataCadastro, id]);
 
     res.sendStatus(200);
+
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
