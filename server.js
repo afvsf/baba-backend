@@ -36,9 +36,10 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// ===== INIT DB =====
+// ===== INIT DB + MIGRATION =====
 async function initDB() {
  
+  // 👤 JOGADORES
   await pool.query(`
     CREATE TABLE IF NOT EXISTS jogadores (
       id TEXT PRIMARY KEY,
@@ -51,6 +52,7 @@ async function initDB() {
     );
   `);
 
+  // ⚽ REGISTROS (estrutura base)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
       id SERIAL PRIMARY KEY,
@@ -58,14 +60,28 @@ async function initDB() {
       jogadorId TEXT,
       gols INTEGER,
       cartoes INTEGER,
-      cartao_amarelo INTEGER,
-      cartao_azul INTEGER,
-      cartao_vermelho INTEGER,
       obs TEXT,
       pagamento TEXT
     );
   `);
 
+  // 🔥 MIGRATION AUTOMÁTICA (cartões novos)
+  await pool.query(`
+    ALTER TABLE registros 
+    ADD COLUMN IF NOT EXISTS cartao_amarelo INTEGER DEFAULT 0;
+  `);
+
+  await pool.query(`
+    ALTER TABLE registros 
+    ADD COLUMN IF NOT EXISTS cartao_azul INTEGER DEFAULT 0;
+  `);
+
+  await pool.query(`
+    ALTER TABLE registros 
+    ADD COLUMN IF NOT EXISTS cartao_vermelho INTEGER DEFAULT 0;
+  `);
+
+  // 💰 MENSALIDADES
   await pool.query(`
     CREATE TABLE IF NOT EXISTS mensalidades (
       id SERIAL PRIMARY KEY,
@@ -76,6 +92,7 @@ async function initDB() {
     );
   `);
 
+  // 💸 GASTOS
   await pool.query(`
     CREATE TABLE IF NOT EXISTS gastos (
       id SERIAL PRIMARY KEY,
@@ -85,7 +102,7 @@ async function initDB() {
     );
   `);
 
-  console.log("✅ Banco PostgreSQL pronto");
+  console.log("✅ Banco atualizado (migration OK)");
 }
 
 initDB();
