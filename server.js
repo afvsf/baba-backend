@@ -58,6 +58,9 @@ async function initDB() {
       jogadorId TEXT,
       gols INTEGER,
       cartoes INTEGER,
+      cartao_amarelo INTEGER,
+      cartao_azul INTEGER,
+      cartao_vermelho INTEGER,
       obs TEXT,
       pagamento TEXT
     );
