@@ -195,16 +195,16 @@ app.get('/registros', async (req, res) => {
 });
 
 app.post('/registro', async (req, res) => {
-  let { data, jogadorId, gols, cartoes, obs, pagamento } = req.body;
+  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento } = req.body;
 
   try {
 
     data = formatarData(data);
 
     await pool.query(`
-      INSERT INTO registros (data, jogadorId, gols, cartoes, obs, pagamento)
-      VALUES ($1,$2,$3,$4,$5,$6)
-    `, [data, jogadorId, gols, cartoes, obs, pagamento]);
+      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    `, [data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento]);
 
     res.sendStatus(200);
 
