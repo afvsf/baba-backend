@@ -208,6 +208,53 @@ app.post('/registro', async (req, res) => {
   }
 });
 
+app.put('/registro/:id', async (req, res) => {
+  const { id } = req.params;
+
+  let {
+    data,
+    jogadorId,
+    gols,
+    cartao_amarelo,
+    cartao_azul,
+    cartao_vermelho,
+    obs
+  } = req.body;
+
+  try {
+
+    data = formatarData(data);
+
+    await pool.query(`
+      UPDATE registros
+      SET 
+        data = $1,
+        jogadorId = $2,
+        gols = $3,
+        cartao_amarelo = $4,
+        cartao_azul = $5,
+        cartao_vermelho = $6,
+        obs = $7
+      WHERE id = $8
+    `, [
+      data,
+      jogadorId,
+      gols,
+      cartao_amarelo,
+      cartao_azul,
+      cartao_vermelho,
+      obs,
+      id
+    ]);
+
+    res.sendStatus(200);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erro: err.message });
+  }
+});
+
 
 // =============================
 // 💰 MENSALIDADES (PRO)
