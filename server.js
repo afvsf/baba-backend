@@ -2,9 +2,20 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 
+// 🔥 CAPTURA ERROS GLOBAIS (coloque AQUI)
+process.on('uncaughtException', err => {
+  console.error('❌ Erro não tratado:', err);
+});
+
+process.on('unhandledRejection', err => {
+  console.error('❌ Promise rejeitada:', err);
+});
+
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*'
+}));
 
 function formatarData(data){
   if(!data) return null;
@@ -98,7 +109,6 @@ async function initDB() {
   console.log("✅ Banco atualizado (migration OK)");
 }
 
-initDB();
 
 
 // =============================
@@ -324,61 +334,33 @@ app.post('/mensalidades', async (req, res) => {
 });
 
 
-// =============================
-// 💸 GASTOS
-// =============================
-
-app.get('/gastos', async (req, res) => {
-  try {
-    const { rows } = await pool.query("SELECT * FROM gastos");
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ erro: err.message });
-  }
-});
-
-app.post('/gasto', async (req, res) => {
-  const { data, descricao, valor } = req.body;
-
-  try {
-    await pool.query(`
-      INSERT INTO gastos (data, descricao, valor)
-      VALUES ($1,$2,$3)
-    `, [data, descricao, valor]);
-
-    res.sendStatus(200);
-  } catch (err) {
-    res.status(500).json({ erro: err.message });
-  }
-});
-
-app.post('/gasto', async (req, res) => {
-  let { data, descricao, valor } = req.body;
-
-  try {
-
-    data = formatarData(data);
-    valor = Number(valor);
-
-    await pool.query(`
-      INSERT INTO gastos (data, descricao, valor)
-      VALUES ($1,$2,$3)
-    `, [data, descricao, valor]);
-
-    res.sendStatus(200);
-
-  } catch (err) {
-    res.status(500).json({ erro: err.message });
-  }
-});
-
 
 // =============================
 // 🚀 START
 // =============================
 
-const PORT = process.env.PORT || 3000;
+async function startServer() {
+  try {
+    console.log("🔄 Conectando ao banco...");
 
-app.listen(PORT, () => {
-  console.log("Servidor rodando");
-});
+    await pool.query("SELECT 1");
+
+    console.log("✅ Banco conectado");
+
+    await initDB();
+
+    console.log("✅ Migration OK");
+
+    const PORT = process.env.PORT || 3000;
+
+    app.listen(PORT, () => {
+      console.log("🚀 Servidor rodando na porta " + PORT);
+    });
+
+  } catch (err) {
+    console.error("❌ ERRO AO INICIAR:", err);
+    process.exit(1);
+  }
+}
+
+startServer();
