@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 
-// 🔥 CAPTURA ERROS GLOBAIS (coloque AQUI)
+// 🔥 CAPTURA ERROS GLOBAIS
 process.on('uncaughtException', err => {
   console.error('❌ Erro não tratado:', err);
 });
@@ -12,20 +12,22 @@ process.on('unhandledRejection', err => {
 });
 
 const app = express();
-app.use(express.json());
+
+// 🔥 CORS LIBERADO (GitHub Pages + testes)
 app.use(cors({
   origin: '*'
 }));
 
+app.use(express.json());
+
+// ===== FORMATAR DATA =====
 function formatarData(data){
   if(!data) return null;
 
-  // remove timezone
   if(data.includes('T')){
     return data.split('T')[0];
   }
 
-  // converte dd/mm/yyyy → yyyy-mm-dd
   if(data.includes('/')){
     const [dia, mes, ano] = data.split('/');
     return `${ano}-${mes}-${dia}`;
@@ -34,7 +36,7 @@ function formatarData(data){
   return data;
 }
 
-// 🔥 CONEXÃO POSTGRES (Render)
+// ===== CONEXÃO POSTGRES =====
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -42,8 +44,7 @@ const pool = new Pool({
 
 // ===== INIT DB + MIGRATION =====
 async function initDB() {
- 
-  // 👤 JOGADORES
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS jogadores (
       id TEXT PRIMARY KEY,
@@ -56,36 +57,20 @@ async function initDB() {
     );
   `);
 
-  // ⚽ REGISTROS (estrutura base)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
       id SERIAL PRIMARY KEY,
       data TEXT,
       jogadorId TEXT,
-      gols INTEGER,
-      cartoes INTEGER,
+      gols INTEGER DEFAULT 0,
+      cartao_amarelo INTEGER DEFAULT 0,
+      cartao_azul INTEGER DEFAULT 0,
+      cartao_vermelho INTEGER DEFAULT 0,
       obs TEXT,
       pagamento TEXT
     );
   `);
 
-  // 🔥 MIGRATION AUTOMÁTICA (cartões novos)
-  await pool.query(`
-    ALTER TABLE registros 
-    ADD COLUMN IF NOT EXISTS cartao_amarelo INTEGER DEFAULT 0;
-  `);
-
-  await pool.query(`
-    ALTER TABLE registros 
-    ADD COLUMN IF NOT EXISTS cartao_azul INTEGER DEFAULT 0;
-  `);
-
-  await pool.query(`
-    ALTER TABLE registros 
-    ADD COLUMN IF NOT EXISTS cartao_vermelho INTEGER DEFAULT 0;
-  `);
-
-  // 💰 MENSALIDADES
   await pool.query(`
     CREATE TABLE IF NOT EXISTS mensalidades (
       id SERIAL PRIMARY KEY,
@@ -96,7 +81,6 @@ async function initDB() {
     );
   `);
 
-  // 💸 GASTOS
   await pool.query(`
     CREATE TABLE IF NOT EXISTS gastos (
       id SERIAL PRIMARY KEY,
@@ -106,10 +90,8 @@ async function initDB() {
     );
   `);
 
-  console.log("✅ Banco atualizado (migration OK)");
+  console.log("✅ Banco OK + Migration aplicada");
 }
-
-
 
 // =============================
 // 👤 JOGADORES
@@ -120,7 +102,6 @@ app.get('/jogadores', async (req, res) => {
     const { rows } = await pool.query("SELECT * FROM jogadores ORDER BY nome");
     res.json(rows);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ erro: err.message });
   }
 });
@@ -129,11 +110,7 @@ app.post('/jogadores', async (req, res) => {
   let { id, nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
 
   try {
-
-    // 🔥 CORREÇÃO DATA
-    if(dataCadastro){
-      dataCadastro = formatarData(dataCadastro);
-    }
+    dataCadastro = formatarData(dataCadastro);
 
     await pool.query(`
       INSERT INTO jogadores (id, nome, apelido, posicao, telefone, tipo, dataCadastro)
@@ -143,32 +120,16 @@ app.post('/jogadores', async (req, res) => {
     res.sendStatus(200);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ erro: err.message });
   }
 });
 
-app.delete('/jogadores/:id', async (req, res) => {
-  try {
-    await pool.query("DELETE FROM jogadores WHERE id = $1", [req.params.id]);
-    res.sendStatus(200);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: err.message });
-  }
-});
-
-// UPDATE jogador
 app.put('/jogadores/:id', async (req, res) => {
   const { id } = req.params;
   let { nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
 
   try {
-
-    // 🔥 CORREÇÃO DATA
-    if(dataCadastro){
-      dataCadastro = formatarData(dataCadastro);
-    }
+    dataCadastro = formatarData(dataCadastro);
 
     await pool.query(`
       UPDATE jogadores
@@ -183,6 +144,14 @@ app.put('/jogadores/:id', async (req, res) => {
   }
 });
 
+app.delete('/jogadores/:id', async (req, res) => {
+  try {
+    await pool.query("DELETE FROM jogadores WHERE id = $1", [req.params.id]);
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
 
 // =============================
 // ⚽ REGISTROS
@@ -198,16 +167,23 @@ app.get('/registros', async (req, res) => {
 });
 
 app.post('/registro', async (req, res) => {
-  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento } = req.body;
+  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs } = req.body;
 
   try {
-
     data = formatarData(data);
 
     await pool.query(`
-      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-    `, [data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento]);
+      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+    `, [
+      data,
+      jogadorId,
+      gols || 0,
+      cartao_amarelo || 0,
+      cartao_azul || 0,
+      cartao_vermelho || 0,
+      obs
+    ]);
 
     res.sendStatus(200);
 
@@ -219,38 +195,23 @@ app.post('/registro', async (req, res) => {
 app.put('/registro/:id', async (req, res) => {
   const { id } = req.params;
 
-  let {
-    data,
-    jogadorId,
-    gols,
-    cartao_amarelo,
-    cartao_azul,
-    cartao_vermelho,
-    obs
-  } = req.body;
+  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs } = req.body;
 
   try {
-
     data = formatarData(data);
 
     await pool.query(`
       UPDATE registros
-      SET 
-        data = $1,
-        jogadorId = $2,
-        gols = $3,
-        cartao_amarelo = $4,
-        cartao_azul = $5,
-        cartao_vermelho = $6,
-        obs = $7
-      WHERE id = $8
+      SET data=$1, jogadorId=$2, gols=$3,
+          cartao_amarelo=$4, cartao_azul=$5, cartao_vermelho=$6, obs=$7
+      WHERE id=$8
     `, [
       data,
       jogadorId,
-      gols,
-      cartao_amarelo,
-      cartao_azul,
-      cartao_vermelho,
+      gols || 0,
+      cartao_amarelo || 0,
+      cartao_azul || 0,
+      cartao_vermelho || 0,
       obs,
       id
     ]);
@@ -258,85 +219,85 @@ app.put('/registro/:id', async (req, res) => {
     res.sendStatus(200);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ erro: err.message });
   }
 });
 
+app.delete('/registro/:id', async (req, res) => {
+  try {
+    await pool.query("DELETE FROM registros WHERE id = $1", [req.params.id]);
+    res.sendStatus(200);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
 
 // =============================
-// 💰 MENSALIDADES (PRO)
+// 💰 MENSALIDADES
 // =============================
 
 app.get('/mensalidades', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM mensalidades");
-
-    const formatado = rows.map(r => ({
-      ...r,
-      dataFormatada: r.data
-        ? r.data.toISOString().split('T')[0].split('-').reverse().join('/')
-        : null,
-      dataISO: r.data
-        ? r.data.toISOString().split('T')[0]
-        : null
-    }));
-
-    res.json(formatado);
-
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
-});;
+});
 
 app.post('/mensalidades', async (req, res) => {
   let { mes, jogadorId, valor, data } = req.body;
 
   try {
-
-    data = formatarData(data);
-
-    if(!data){
-      const hoje = new Date();
-      data = hoje.toISOString().split('T')[0];
-    }
-
+    data = formatarData(data) || new Date().toISOString().split('T')[0];
     valor = Number(valor || 20);
 
-    const existe = await pool.query(
-      `SELECT id FROM mensalidades WHERE mes = $1 AND jogadorId = $2`,
-      [mes, jogadorId]
-    );
-
-    if (existe.rows.length === 0) {
-
-      await pool.query(`
-        INSERT INTO mensalidades (mes, jogadorId, valor, data)
-        VALUES ($1,$2,$3,$4)
-      `, [mes, jogadorId, valor, data]);
-
-    } else {
-
-      await pool.query(`
-        UPDATE mensalidades
-        SET valor = $1, data = $2
-        WHERE mes = $3 AND jogadorId = $4
-      `, [valor, data, mes, jogadorId]);
-
-    }
+    await pool.query(`
+      INSERT INTO mensalidades (mes, jogadorId, valor, data)
+      VALUES ($1,$2,$3,$4)
+    `, [mes, jogadorId, valor, data]);
 
     res.sendStatus(200);
 
   } catch (err) {
-    console.error(err);
     res.status(500).json({ erro: err.message });
   }
 });
 
+// =============================
+// 💸 GASTOS
+// =============================
 
+app.get('/gastos', async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT * FROM gastos");
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
+app.post('/gasto', async (req, res) => {
+  let { data, descricao, valor } = req.body;
+
+  try {
+    data = formatarData(data);
+    valor = Number(valor);
+
+    await pool.query(`
+      INSERT INTO gastos (data, descricao, valor)
+      VALUES ($1,$2,$3)
+    `, [data, descricao, valor]);
+
+    res.sendStatus(200);
+
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
 
 // =============================
-// 🚀 START
+// 🚀 START SERVER (CORRETO)
 // =============================
 
 async function startServer() {
@@ -348,8 +309,6 @@ async function startServer() {
     console.log("✅ Banco conectado");
 
     await initDB();
-
-    console.log("✅ Migration OK");
 
     const PORT = process.env.PORT || 3000;
 
