@@ -93,6 +93,10 @@ async function initDB() {
   console.log("✅ Banco OK + Migration aplicada");
 }
 
+app.get('/', (req, res) => {
+  res.send('API Baba funcionando 🚀');
+});
+
 // =============================
 // 👤 JOGADORES
 // =============================
