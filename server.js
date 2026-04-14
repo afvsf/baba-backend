@@ -306,13 +306,6 @@ app.post('/gasto', async (req, res) => {
 
 async function startServer() {
   try {
-    console.log("🔄 Conectando ao banco...");
-
-    await pool.query("SELECT 1");
-
-    console.log("✅ Banco conectado");
-
-    await initDB();
 
     const PORT = process.env.PORT || 3000;
 
@@ -320,12 +313,19 @@ async function startServer() {
       console.log("🚀 Servidor rodando na porta " + PORT);
     });
 
-    server.on('error', (err) => {
-      console.error("❌ Erro no servidor:", err);
+    server.keepAliveTimeout = 120000;
+    server.headersTimeout = 120000;
+
+    // 🔥 NÃO BLOQUEIA START
+    initDB().then(() => {
+      console.log("✅ Banco pronto");
+    }).catch(err => {
+      console.error("❌ Erro DB:", err);
     });
 
   } catch (err) {
     console.error("❌ ERRO AO INICIAR:", err);
-    process.exit(1);
   }
 }
+
+startServer();
