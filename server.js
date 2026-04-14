@@ -94,7 +94,7 @@ async function initDB() {
 }
 
 app.get('/', (req, res) => {
-  res.send('API Baba funcionando 🚀');
+  res.send('API OK 🚀');
 });
 
 // =============================
@@ -316,8 +316,12 @@ async function startServer() {
 
     const PORT = process.env.PORT || 3000;
 
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log("🚀 Servidor rodando na porta " + PORT);
+    });
+
+    server.on('error', (err) => {
+      console.error("❌ Erro no servidor:", err);
     });
 
   } catch (err) {
@@ -325,5 +329,3 @@ async function startServer() {
     process.exit(1);
   }
 }
-
-startServer();
