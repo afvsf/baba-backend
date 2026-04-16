@@ -171,27 +171,53 @@ app.get('/registros', async (req, res) => {
 });
 
 app.post('/registro', async (req, res) => {
-  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs } = req.body;
+  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento } = req.body;
 
   try {
+
     data = formatarData(data);
 
-    await pool.query(`
-      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-    `, [
-      data,
-      jogadorId,
-      gols || 0,
-      cartao_amarelo || 0,
-      cartao_azul || 0,
-      cartao_vermelho || 0,
-      obs
-    ]);
+    // 🔥 VERIFICA SE JÁ EXISTE
+    const existe = await pool.query(
+      `SELECT id FROM registros WHERE data = $1 AND jogadorId = $2`,
+      [data, jogadorId]
+    );
 
-    res.sendStatus(200);
+    if (existe.rows.length > 0) {
+
+      // 🔄 UPDATE AUTOMÁTICO
+      await pool.query(`
+        UPDATE registros
+        SET 
+          gols = $1,
+          cartao_amarelo = $2,
+          cartao_azul = $3,
+          cartao_vermelho = $4,
+          obs = $5
+        WHERE data = $6 AND jogadorId = $7
+      `, [
+        gols,
+        cartao_amarelo,
+        cartao_azul,
+        cartao_vermelho,
+        obs,
+        data,
+        jogadorId
+      ]);
+
+      return res.json({ mensagem: "♻️ Atualizado com sucesso" });
+    }
+
+    // 🆕 INSERT NORMAL
+    await pool.query(`
+      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    `, [data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento]);
+
+    res.json({ mensagem: "✅ Registrado com sucesso" });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ erro: err.message });
   }
 });
