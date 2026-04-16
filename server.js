@@ -62,13 +62,17 @@ async function initDB() {
       id SERIAL PRIMARY KEY,
       data TEXT,
       jogadorId TEXT,
-      gols INTEGER DEFAULT 0,
-      cartao_amarelo INTEGER DEFAULT 0,
-      cartao_azul INTEGER DEFAULT 0,
-      cartao_vermelho INTEGER DEFAULT 0,
+      gols INTEGER,
+      cartoes INTEGER,
       obs TEXT,
       pagamento TEXT
     );
+  `);
+
+  // 🔥 INDEX ÚNICO (ANTI DUPLICAÇÃO)
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS unico_registro
+    ON registros (data, jogadorId);
   `);
 
   await pool.query(`
