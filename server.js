@@ -45,17 +45,23 @@ const pool = new Pool({
 // ===== INIT DB + MIGRATION =====
 async function initDB() {
 
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS jogadores (
+    id TEXT PRIMARY KEY,
+    nome TEXT,
+    apelido TEXT,
+    posicao TEXT,
+    telefone TEXT,
+    tipo TEXT,
+    dataCadastro DATE,
+    foto TEXT
+  );
+`);
+
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS jogadores (
-      id TEXT PRIMARY KEY,
-      nome TEXT,
-      apelido TEXT,
-      posicao TEXT,
-      telefone TEXT,
-      tipo TEXT,
-      dataCadastro DATE
-    );
-  `);
+  ALTER TABLE jogadores
+  ADD COLUMN IF NOT EXISTS foto TEXT;
+`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
@@ -134,16 +140,16 @@ app.post('/jogadores', async (req, res) => {
 
 app.put('/jogadores/:id', async (req, res) => {
   const { id } = req.params;
-  let { nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
+  let { nome, apelido, posicao, telefone, tipo, dataCadastro, foto } = req.body;
 
   try {
     dataCadastro = formatarData(dataCadastro);
 
     await pool.query(`
       UPDATE jogadores
-      SET nome=$1, apelido=$2, posicao=$3, telefone=$4, tipo=$5, dataCadastro=$6
-      WHERE id=$7
-    `, [nome, apelido, posicao, telefone, tipo, dataCadastro, id]);
+      SET nome=$1, apelido=$2, posicao=$3, telefone=$4, tipo=$5, dataCadastro=$6, foto=$7
+      WHERE id=$8
+    `, [nome, apelido, posicao, telefone, tipo, dataCadastro, foto, id]);
 
     res.sendStatus(200);
 
