@@ -115,15 +115,15 @@ app.get('/jogadores', async (req, res) => {
 });
 
 app.post('/jogadores', async (req, res) => {
-  let { id, nome, apelido, posicao, telefone, tipo, dataCadastro } = req.body;
+  let { id, nome, apelido, posicao, telefone, tipo, dataCadastro, foto } = req.body;
 
   try {
     dataCadastro = formatarData(dataCadastro);
 
     await pool.query(`
-      INSERT INTO jogadores (id, nome, apelido, posicao, telefone, tipo, dataCadastro)
-      VALUES ($1,$2,$3,$4,$5,$6,$7)
-    `, [id, nome, apelido, posicao, telefone, tipo, dataCadastro]);
+      INSERT INTO jogadores (id, nome, apelido, posicao, telefone, tipo, dataCadastro, foto)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    `, [id, nome, apelido, posicao, telefone, tipo, dataCadastro, foto]);
 
     res.sendStatus(200);
 
