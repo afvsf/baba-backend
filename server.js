@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const jwt = require('jsonwebtoken');
 
 // 🔥 CAPTURA ERROS GLOBAIS
 process.on('uncaughtException', err => {
@@ -19,6 +20,38 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+const SECRET = 'baba_super_secreto_123';
+
+// 🔐 LOGIN
+app.post('/login', (req,res)=>{
+  const {usuario, senha} = req.body;
+
+  if(usuario === 'admin' && senha === '123456'){
+    const token = jwt.sign({usuario}, SECRET, {expiresIn:'8h'});
+    return res.json({token});
+  }
+
+  res.status(401).json({erro:'Login inválido'});
+});
+
+function verificarToken(req,res,next){
+
+  const auth = req.headers.authorization;
+
+  if(!auth){
+    return res.status(401).json({erro:'Sem token'});
+  }
+
+  const token = auth.split(' ')[1];
+
+  try{
+    jwt.verify(token, SECRET);
+    next();
+  }catch{
+    res.status(401).json({erro:'Token inválido'});
+  }
+}
 
 // ===== FORMATAR DATA =====
 function formatarData(data){
