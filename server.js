@@ -336,6 +336,46 @@ app.post('/gastos', async (req, res) => {
   }
 });
 
+app.put('/gastos/:id', async (req, res) => {
+
+  const { id } = req.params;
+  const { data, descricao, valor } = req.body;
+
+  try{
+    const result = await pool.query(`
+      UPDATE gastos
+      SET data = $1,
+          descricao = $2,
+          valor = $3
+      WHERE id = $4
+      RETURNING *
+    `,[data, descricao, valor, id]);
+
+    res.json(result.rows[0]);
+
+  }catch(err){
+    console.error(err);
+    res.status(500).json({erro:'Erro ao atualizar gasto'});
+  }
+});
+
+app.delete('/gastos/:id', async (req, res) => {
+
+  const { id } = req.params;
+
+  try{
+    await pool.query(`
+      DELETE FROM gastos WHERE id = $1
+    `,[id]);
+
+    res.json({ok:true});
+
+  }catch(err){
+    console.error(err);
+    res.status(500).json({erro:'Erro ao excluir gasto'});
+  }
+});
+
 // =============================
 // 🚀 START SERVER (CORRETO)
 // =============================
