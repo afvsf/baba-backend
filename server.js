@@ -317,7 +317,7 @@ app.get('/gastos', async (req, res) => {
   }
 });
 
-app.post('/gasto', async (req, res) => {
+app.post('/gastos', async (req, res) => {
   let { data, descricao, valor } = req.body;
 
   try {
