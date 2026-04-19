@@ -144,7 +144,7 @@ app.get('/', (req, res) => {
 // 👤 JOGADORES
 // =============================
 
-app.get('/jogadores', async (req, res) => {
+app.get('/jogadores', verificarToken, async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM jogadores ORDER BY nome");
     res.json(rows);
@@ -153,7 +153,7 @@ app.get('/jogadores', async (req, res) => {
   }
 });
 
-app.post('/jogadores', async (req, res) => {
+app.post('/jogadores', verificarToken, async (req, res) => {
   let { id, nome, apelido, posicao, telefone, tipo, dataCadastro, foto } = req.body;
 
   try {
@@ -171,7 +171,7 @@ app.post('/jogadores', async (req, res) => {
   }
 });
 
-app.put('/jogadores/:id', async (req, res) => {
+app.put('/jogadores/:id', verificarToken, async (req, res) => {
   const { id } = req.params;
   let { nome, apelido, posicao, telefone, tipo, dataCadastro, foto } = req.body;
 
@@ -191,7 +191,7 @@ app.put('/jogadores/:id', async (req, res) => {
   }
 });
 
-app.delete('/jogadores/:id', async (req, res) => {
+app.delete('/jogadores/:id', verificarToken, async (req, res) => {
   try {
     await pool.query("DELETE FROM jogadores WHERE id = $1", [req.params.id]);
     res.sendStatus(200);
@@ -204,7 +204,7 @@ app.delete('/jogadores/:id', async (req, res) => {
 // ⚽ REGISTROS
 // =============================
 
-app.get('/registros', async (req, res) => {
+app.get('/registros', verificarToken, async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM registros");
     res.json(rows);
@@ -213,7 +213,7 @@ app.get('/registros', async (req, res) => {
   }
 });
 
-app.post('/registro', async (req, res) => {
+app.post('/registro', verificarToken, async (req, res) => {
   let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento } = req.body;
 
   try {
@@ -265,7 +265,7 @@ app.post('/registro', async (req, res) => {
   }
 });
 
-app.put('/registro/:id', async (req, res) => {
+app.put('/registro/:id', verificarToken, async (req, res) => {
   const { id } = req.params;
 
   let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs } = req.body;
@@ -296,7 +296,7 @@ app.put('/registro/:id', async (req, res) => {
   }
 });
 
-app.delete('/registro/:id', async (req, res) => {
+app.delete('/registro/:id', verificarToken, async (req, res) => {
   try {
     await pool.query("DELETE FROM registros WHERE id = $1", [req.params.id]);
     res.sendStatus(200);
@@ -309,7 +309,7 @@ app.delete('/registro/:id', async (req, res) => {
 // 💰 MENSALIDADES
 // =============================
 
-app.get('/mensalidades', async (req, res) => {
+app.get('/mensalidades', verificarToken, async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM mensalidades");
     res.json(rows);
@@ -318,7 +318,7 @@ app.get('/mensalidades', async (req, res) => {
   }
 });
 
-app.post('/mensalidades', async (req, res) => {
+app.post('/mensalidades', verificarToken, async (req, res) => {
   let { mes, jogadorId, valor, data } = req.body;
 
   try {
@@ -341,7 +341,7 @@ app.post('/mensalidades', async (req, res) => {
 // 💸 GASTOS
 // =============================
 
-app.get('/gastos', async (req, res) => {
+app.get('/gastos', verificarToken, async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM gastos");
     res.json(rows);
@@ -350,7 +350,7 @@ app.get('/gastos', async (req, res) => {
   }
 });
 
-app.post('/gastos', async (req, res) => {
+app.post('/gastos', verificarToken, async (req, res) => {
   let { data, descricao, valor } = req.body;
 
   try {
@@ -369,7 +369,7 @@ app.post('/gastos', async (req, res) => {
   }
 });
 
-app.put('/gastos/:id', async (req, res) => {
+app.put('/gastos/:id', verificarToken, async (req, res) => {
 
   const { id } = req.params;
   const { data, descricao, valor } = req.body;
@@ -392,7 +392,7 @@ app.put('/gastos/:id', async (req, res) => {
   }
 });
 
-app.delete('/gastos/:id', async (req, res) => {
+app.delete('/gastos/:id', verificarToken, async (req, res) => {
 
   const { id } = req.params;
 
