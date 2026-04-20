@@ -216,6 +216,26 @@ app.delete('/jogadores/:id', verificarToken, async (req, res) => {
   }
 });
 
+app.put('/aceitar-regulamento/:id', async (req,res)=>{
+
+  const { id } = req.params;
+
+  try{
+    await pool.query(`
+      UPDATE jogadores
+      SET aceitou_regulamento = true
+      WHERE id = $1
+    `,[id]);
+
+    res.json({ok:true});
+
+  }catch(err){
+    res.status(500).json({erro:err.message});
+  }
+
+});
+
+
 // =============================
 // ⚽ REGISTROS
 // =============================
