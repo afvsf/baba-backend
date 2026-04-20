@@ -158,7 +158,7 @@ app.get('/', (req, res) => {
 // 👤 JOGADORES
 // =============================
 
-app.get('/jogadores', verificarToken, async (req, res) => {
+app.get('/jogadores', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM jogadores ORDER BY nome");
     res.json(rows);
@@ -218,7 +218,7 @@ app.delete('/jogadores/:id', verificarToken, async (req, res) => {
 // ⚽ REGISTROS
 // =============================
 
-app.get('/registros', verificarToken, async (req, res) => {
+app.get('/registros', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM registros");
     res.json(rows);
@@ -323,7 +323,7 @@ app.delete('/registro/:id', verificarToken, async (req, res) => {
 // 💰 MENSALIDADES
 // =============================
 
-app.get('/mensalidades', verificarToken, async (req, res) => {
+app.get('/mensalidades', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM mensalidades");
     res.json(rows);
@@ -355,7 +355,7 @@ app.post('/mensalidades', verificarToken, async (req, res) => {
 // 💸 GASTOS
 // =============================
 
-app.get('/gastos', verificarToken, async (req, res) => {
+app.get('/gastos', async (req, res) => {
   try {
     const { rows } = await pool.query("SELECT * FROM gastos");
     res.json(rows);
