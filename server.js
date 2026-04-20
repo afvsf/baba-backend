@@ -101,14 +101,16 @@ await pool.query(`
     telefone TEXT,
     tipo TEXT,
     dataCadastro DATE,
-    foto TEXT
+    foto TEXT,
+    aceitou_regulamento BOOLEAN
+    
   );
 `);
 
-  await pool.query(`
-  ALTER TABLE jogadores
-  ADD COLUMN IF NOT EXISTS foto TEXT;
-`);
+ await pool.query(`
+    ALTER TABLE jogadores
+    ADD COLUMN IF NOT EXISTS aceitou_regulamento BOOLEAN DEFAULT false;
+  `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS registros (
