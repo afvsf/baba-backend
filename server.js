@@ -25,17 +25,30 @@ app.use(express.json());
 const SECRET = 'baba_super_secreto_123';
 
 // 🔐 LOGIN
-app.post('/login', (req,res)=>{
-  const {usuario, senha} = req.body;
+app.post('/login', async (req,res)=>{
 
-  if(usuario === 'admin' && senha === '123456'){
-    const token = jwt.sign({usuario}, SECRET, {expiresIn:'8h'});
-    return res.json({token});
+  const { usuario, senha } = req.body;
+
+  // 👉 usuário fixo (pode evoluir depois)
+  const usuarioPadrao = 'admin';
+  const senhaHash = await bcrypt.hash('123456', 10);
+
+  if(usuario !== usuarioPadrao){
+    return res.status(401).json({erro:'Usuário inválido'});
   }
 
-  res.status(401).json({erro:'Login inválido'});
+  const senhaOk = await bcrypt.compare(senha, senhaHash);
+
+  if(!senhaOk){
+    return res.status(401).json({erro:'Senha inválida'});
+  }
+
+  const token = jwt.sign({usuario}, SECRET, {expiresIn:'8h'});
+
+  res.json({token});
 });
 
+ // 👉 FUNÇÃO VERIFICAR O TOKEN
 function verificarToken(req,res,next){
 
   const auth = req.headers.authorization;
