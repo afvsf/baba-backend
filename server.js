@@ -176,7 +176,7 @@ app.get('/jogadores', async (req, res) => {
   }
 });
 
-app.post('/jogadores', verificarToken, async (req, res) => {
+app.post('/jogadores', async (req, res) => {
   let { id, nome, apelido, posicao, telefone, tipo, dataCadastro, foto } = req.body;
 
   try {
