@@ -15,12 +15,19 @@ process.on('unhandledRejection', err => {
 
 const app = express();
 
-// 🔥 CORS LIBERADO (GitHub Pages + testes)
+// 🔥 CORS LIBERADO (GitHub Pages + local)
 app.use(cors({
-  origin: '*'
+  origin: [
+    'https://afvsf.github.io',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500'
+  ],
+  methods: ['GET','POST','PUT','DELETE'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
-app.use(express.json());
+// 🔥 LIMITE MAIOR (resolve 413)
+app.use(express.json({ limit: '10mb' }));
 
 const SECRET = 'baba_super_secreto_123';
 
