@@ -131,15 +131,23 @@ await pool.query(`
     );
   `);
 
-  await pool.query(`
-  ALTER TABLE registros
-  ALTER COLUMN confirmado TYPE BOOLEAN
-  USING confirmado::boolean;
-`);
-
+// 1. Remove default antigo (0 ou 1)
 await pool.query(`
   ALTER TABLE registros
-  ADD COLUMN IF NOT EXISTS confirmado BOOLEAN DEFAULT false;
+  ALTER COLUMN confirmado DROP DEFAULT;
+`);
+
+// 2. Converte para boolean
+await pool.query(`
+  ALTER TABLE registros
+  ALTER COLUMN confirmado TYPE BOOLEAN
+  USING (confirmado = 1);
+`);
+
+// 3. Define novo default
+await pool.query(`
+  ALTER TABLE registros
+  ALTER COLUMN confirmado SET DEFAULT false;
 `);
 
   // 🔥 INDEX ÚNICO (ANTI DUPLICAÇÃO)
