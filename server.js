@@ -184,20 +184,37 @@ app.get('/', (req, res) => {
 });
 
 app.get('/config', async (req,res)=>{
-  const { rows } = await pool.query("SELECT * FROM config LIMIT 1");
-  res.json(rows[0] || {});
+
+  const { rows } = await pool.query('SELECT * FROM config LIMIT 1');
+
+  if(rows.length === 0){
+    return res.json({ data_baba: null });
+  }
+
+  res.json(rows[0]);
 });
 
-app.post('/config', verificarToken, async (req,res)=>{
+app.put('/config', verificarToken, async (req,res)=>{
 
   const { data_baba } = req.body;
 
-  await pool.query("DELETE FROM config");
+  const { rows } = await pool.query('SELECT * FROM config LIMIT 1');
 
-  await pool.query(`
-    INSERT INTO config (data_baba)
-    VALUES ($1)
-  `,[data_baba]);
+  if(rows.length === 0){
+
+    await pool.query(`
+      INSERT INTO config (data_baba)
+      VALUES ($1)
+    `,[data_baba]);
+
+  }else{
+
+    await pool.query(`
+      UPDATE config
+      SET data_baba = $1
+      WHERE id = $2
+    `,[data_baba, rows[0].id]);
+  }
 
   res.json({ok:true});
 });
