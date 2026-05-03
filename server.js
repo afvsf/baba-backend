@@ -131,6 +131,11 @@ await pool.query(`
     );
   `);
 
+   await pool.query(`
+    ALTER TABLE registros
+    ADD COLUMN IF NOT EXISTS confirmado INTEGER DEFAULT 0;
+  `);
+
   // 🔥 INDEX ÚNICO (ANTI DUPLICAÇÃO)
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS unico_registro
@@ -257,7 +262,7 @@ app.get('/registros', async (req, res) => {
 });
 
 app.post('/registro', verificarToken, async (req, res) => {
-  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento } = req.body;
+  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento, confirmado } = req.body;
 
   try {
 
@@ -279,8 +284,9 @@ app.post('/registro', verificarToken, async (req, res) => {
           cartao_amarelo = $2,
           cartao_azul = $3,
           cartao_vermelho = $4,
-          obs = $5
-        WHERE data = $6 AND jogadorId = $7
+          obs = $5,
+          confirmado = $6
+        WHERE data = $7 AND jogadorId = $8
       `, [
         gols,
         cartao_amarelo,
@@ -288,7 +294,9 @@ app.post('/registro', verificarToken, async (req, res) => {
         cartao_vermelho,
         obs,
         data,
-        jogadorId
+        jogadorId,
+        confirmado
+        
       ]);
 
       return res.json({ mensagem: "♻️ Atualizado com sucesso" });
@@ -296,9 +304,9 @@ app.post('/registro', verificarToken, async (req, res) => {
 
     // 🆕 INSERT NORMAL
     await pool.query(`
-      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-    `, [data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento]);
+      INSERT INTO registros (data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento, confirmado)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    `, [data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento, confirmado ]);
 
     res.json({ mensagem: "✅ Registrado com sucesso" });
 
@@ -311,7 +319,7 @@ app.post('/registro', verificarToken, async (req, res) => {
 app.put('/registro/:id', verificarToken, async (req, res) => {
   const { id } = req.params;
 
-  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs } = req.body;
+  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, confirmado } = req.body;
 
   try {
     data = formatarData(data);
@@ -319,8 +327,8 @@ app.put('/registro/:id', verificarToken, async (req, res) => {
     await pool.query(`
       UPDATE registros
       SET data=$1, jogadorId=$2, gols=$3,
-          cartao_amarelo=$4, cartao_azul=$5, cartao_vermelho=$6, obs=$7
-      WHERE id=$8
+          cartao_amarelo=$4, cartao_azul=$5, confirmado=$6, cartao_vermelho=$7, obs=$8
+      WHERE id=$9
     `, [
       data,
       jogadorId,
@@ -328,6 +336,7 @@ app.put('/registro/:id', verificarToken, async (req, res) => {
       cartao_amarelo || 0,
       cartao_azul || 0,
       cartao_vermelho || 0,
+      confirmado || 0,
       obs,
       id
     ]);
@@ -346,6 +355,27 @@ app.delete('/registro/:id', verificarToken, async (req, res) => {
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
+});
+
+app.put('/registros/confirmar/:id', (req, res) => {
+
+  const { id } = req.params;
+
+  db.run(`
+    UPDATE registros
+    SET confirmado = 1
+    WHERE id = ?
+  `,
+  [id],
+  function(err){
+
+    if(err){
+      return res.status(500).json({erro: err.message});
+    }
+
+    res.json({ok:true});
+  });
+
 });
 
 // =============================
