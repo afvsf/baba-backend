@@ -131,10 +131,16 @@ await pool.query(`
     );
   `);
 
-   await pool.query(`
-    ALTER TABLE registros
-    ADD COLUMN IF NOT EXISTS confirmado INTEGER DEFAULT 0;
-  `);
+  await pool.query(`
+  ALTER TABLE registros
+  ALTER COLUMN confirmado TYPE BOOLEAN
+  USING confirmado::boolean;
+`);
+
+await pool.query(`
+  ALTER TABLE registros
+  ALTER COLUMN confirmado SET DEFAULT false;
+`);
 
   // 🔥 INDEX ÚNICO (ANTI DUPLICAÇÃO)
   await pool.query(`
@@ -161,11 +167,37 @@ await pool.query(`
     );
   `);
 
+  await pool.query(`
+  CREATE TABLE IF NOT EXISTS config (
+    id SERIAL PRIMARY KEY,
+    data_baba DATE
+  );
+`);
+
   console.log("✅ Banco OK + Migration aplicada");
 }
 
 app.get('/', (req, res) => {
   res.send('API OK 🚀');
+});
+
+app.get('/config', async (req,res)=>{
+  const { rows } = await pool.query("SELECT * FROM config LIMIT 1");
+  res.json(rows[0] || {});
+});
+
+app.post('/config', verificarToken, async (req,res)=>{
+
+  const { data_baba } = req.body;
+
+  await pool.query("DELETE FROM config");
+
+  await pool.query(`
+    INSERT INTO config (data_baba)
+    VALUES ($1)
+  `,[data_baba]);
+
+  res.json({ok:true});
 });
 
 // =============================
@@ -261,7 +293,7 @@ app.get('/registros', async (req, res) => {
   }
 });
 
-app.post('/registro', verificarToken, async (req, res) => {
+app.post('/registro', async (req, res) => {
   let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento, confirmado } = req.body;
 
   try {
@@ -293,9 +325,9 @@ app.post('/registro', verificarToken, async (req, res) => {
         cartao_azul,
         cartao_vermelho,
         obs,
+        confirmado,
         data,
-        jogadorId,
-        confirmado
+        jogadorId  
         
       ]);
 
@@ -357,24 +389,22 @@ app.delete('/registro/:id', verificarToken, async (req, res) => {
   }
 });
 
-app.put('/registros/confirmar/:id', (req, res) => {
+app.put('/registros/confirmar/:id', verificarToken, async (req, res) => {
 
   const { id } = req.params;
 
-  db.run(`
-    UPDATE registros
-    SET confirmado = 1
-    WHERE id = ?
-  `,
-  [id],
-  function(err){
-
-    if(err){
-      return res.status(500).json({erro: err.message});
-    }
+  try{
+    await pool.query(`
+      UPDATE registros
+      SET confirmado = true
+      WHERE id = $1
+    `,[id]);
 
     res.json({ok:true});
-  });
+
+  }catch(err){
+    res.status(500).json({erro: err.message});
+  }
 
 });
 
