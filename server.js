@@ -139,7 +139,7 @@ await pool.query(`
 
 await pool.query(`
   ALTER TABLE registros
-  ALTER COLUMN confirmado SET DEFAULT false;
+  ADD COLUMN IF NOT EXISTS confirmado BOOLEAN DEFAULT false;
 `);
 
   // 🔥 INDEX ÚNICO (ANTI DUPLICAÇÃO)
