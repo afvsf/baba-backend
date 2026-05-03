@@ -148,6 +148,13 @@ await pool.query(`
     ON registros (data, jogadorId);
   `);
 
+    await pool.query(`
+  CREATE TABLE IF NOT EXISTS config (
+    id SERIAL PRIMARY KEY,
+    data_baba DATE
+  );
+`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS mensalidades (
       id SERIAL PRIMARY KEY,
@@ -167,12 +174,7 @@ await pool.query(`
     );
   `);
 
-  await pool.query(`
-  CREATE TABLE IF NOT EXISTS config (
-    id SERIAL PRIMARY KEY,
-    data_baba DATE
-  );
-`);
+
 
   console.log("✅ Banco OK + Migration aplicada");
 }
