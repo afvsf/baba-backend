@@ -320,7 +320,7 @@ app.get('/registros', async (req, res) => {
   }
 });
 
-app.post('/registro', async (req, res) => {
+app.post('/registros', async (req, res) => {
   let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, pagamento, confirmado } = req.body;
 
   try {
