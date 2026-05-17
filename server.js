@@ -208,54 +208,81 @@ app.put('/config', verificarToken, async (req,res)=>{
 
     let { data_baba } = req.body;
 
+    console.log(
+      'DATA RECEBIDA:',
+      data_baba
+    );
+
     if(!data_baba){
-      return res
-      .status(400)
-      .json({erro:'Data não enviada'});
+
+      return res.status(400)
+      .json({
+        erro:'data_baba vazia'
+      });
+
     }
 
-    // garante YYYY-MM-DD
     data_baba =
       data_baba.split('T')[0];
 
-    const result =
-      await pool.query(`
-        SELECT id
-        FROM config
-        LIMIT 1
-      `);
+    const existe =
+    await pool.query(`
+      SELECT id
+      FROM config
+      LIMIT 1
+    `);
 
-    if(result.rows.length===0){
+    if(existe.rows.length===0){
 
       await pool.query(`
-        INSERT INTO config
-        (data_baba)
-        VALUES($1)
-      `,[data_baba]);
+      INSERT INTO config
+      (data_baba)
+      VALUES($1)
+      `,
+      [data_baba]);
+
+      console.log(
+        'INSERT realizado'
+      );
 
     }else{
 
       await pool.query(`
-        UPDATE config
-        SET data_baba=$1
-        WHERE id=$2
-      `,[
+      UPDATE config
+      SET data_baba=$1
+      WHERE id=$2
+      `,
+      [
         data_baba,
-        result.rows[0].id
+        existe.rows[0].id
       ]);
+
+      console.log(
+        'UPDATE realizado'
+      );
 
     }
 
+    const teste =
+    await pool.query(`
+      SELECT *
+      FROM config
+    `);
+
+    console.log(
+      teste.rows
+    );
+
     res.json({
-      ok:true,
-      data:data_baba
+      ok:true
     });
 
   }catch(err){
 
     console.error(err);
 
-    res.status(500).json({
+    res.status(500)
+    .json({
       erro:err.message
     });
 
