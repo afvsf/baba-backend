@@ -204,27 +204,63 @@ app.get('/config', async (req,res)=>{
 
 app.put('/config', verificarToken, async (req,res)=>{
 
-  const { data_baba } = req.body;
+  try{
 
-  const { rows } = await pool.query('SELECT * FROM config LIMIT 1');
+    let { data_baba } = req.body;
 
-  if(rows.length === 0){
+    if(!data_baba){
+      return res
+      .status(400)
+      .json({erro:'Data não enviada'});
+    }
 
-    await pool.query(`
-      INSERT INTO config (data_baba)
-      VALUES ($1)
-    `,[data_baba]);
+    // garante YYYY-MM-DD
+    data_baba =
+      data_baba.split('T')[0];
 
-  }else{
+    const result =
+      await pool.query(`
+        SELECT id
+        FROM config
+        LIMIT 1
+      `);
 
-    await pool.query(`
-      UPDATE config
-      SET data_baba = $1
-      WHERE id = $2
-    `,[data_baba, rows[0].id]);
+    if(result.rows.length===0){
+
+      await pool.query(`
+        INSERT INTO config
+        (data_baba)
+        VALUES($1)
+      `,[data_baba]);
+
+    }else{
+
+      await pool.query(`
+        UPDATE config
+        SET data_baba=$1
+        WHERE id=$2
+      `,[
+        data_baba,
+        result.rows[0].id
+      ]);
+
+    }
+
+    res.json({
+      ok:true,
+      data:data_baba
+    });
+
+  }catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      erro:err.message
+    });
+
   }
 
-  res.json({ok:true});
 });
 
 // =============================
