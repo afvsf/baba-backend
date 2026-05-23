@@ -438,36 +438,61 @@ app.post('/registros', async (req, res) => {
   }
 });
 
-app.put('/registros/:id', verificarToken, async (req, res) => {
-  const { id } = req.params;
+app.put('/registros/:id', verificarToken, async(req,res)=>{
 
-  let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, confirmado } = req.body;
+   const { id } = req.params;
 
-  try {
-    data = formatarData(data);
-
-    await pool.query(`
-      UPDATE registros
-      SET data=$1, jogadorId=$2, gols=$3,
-          cartao_amarelo=$4, cartao_azul=$5, confirmado=$6, cartao_vermelho=$7, obs=$8
-      WHERE id=$9
-    `, [
+   const {
       data,
       jogadorId,
-      gols || 0,
-      cartao_amarelo || 0,
-      cartao_azul || 0,
-      cartao_vermelho || 0,
-      confirmado || 0,
-      obs,
-      id
-    ]);
+      gols,
+      cartao_amarelo,
+      cartao_azul,
+      cartao_vermelho,
+      obs
+   } = req.body;
 
-    res.sendStatus(200);
+   try{
 
-  } catch (err) {
-    res.status(500).json({ erro: err.message });
-  }
+      await pool.query(`
+         UPDATE registros
+         SET
+            data = $1,
+            jogadorid = $2,
+            gols = $3,
+            cartao_amarelo = $4,
+            cartao_azul = $5,
+            cartao_vermelho = $6,
+            obs = $7
+         WHERE id = $8
+      `,[
+         data,
+         jogadorId,
+         gols || 0,
+         cartao_amarelo || 0,
+         cartao_azul || 0,
+         cartao_vermelho || 0,
+         obs || '',
+         id
+      ]);
+
+      res.json({
+         ok:true
+      });
+
+   }catch(err){
+
+      console.log(
+        'ERRO UPDATE:',
+        err
+      );
+
+      res.status(500).json({
+         erro:err.message
+      });
+
+   }
+
 });
 
 app.delete('/registros/:id', verificarToken, async (req, res) => {
