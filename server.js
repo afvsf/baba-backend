@@ -438,7 +438,7 @@ app.post('/registros', async (req, res) => {
   }
 });
 
-app.put('/registro/:id', verificarToken, async (req, res) => {
+app.put('/registros/:id', verificarToken, async (req, res) => {
   const { id } = req.params;
 
   let { data, jogadorId, gols, cartao_amarelo, cartao_azul, cartao_vermelho, obs, confirmado } = req.body;
@@ -470,7 +470,7 @@ app.put('/registro/:id', verificarToken, async (req, res) => {
   }
 });
 
-app.delete('/registro/:id', verificarToken, async (req, res) => {
+app.delete('/registros/:id', verificarToken, async (req, res) => {
   try {
     await pool.query("DELETE FROM registros WHERE id = $1", [req.params.id]);
     res.sendStatus(200);
